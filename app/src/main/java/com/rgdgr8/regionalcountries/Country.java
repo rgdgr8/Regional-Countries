@@ -2,9 +2,21 @@ package com.rgdgr8.regionalcountries;
 
 import androidx.room.Entity;
 import androidx.room.Ignore;
+import androidx.room.PrimaryKey;
 
 @Entity(tableName = "countries")
 public class Country {
+    @PrimaryKey(autoGenerate = true)
+    private int id;
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getId() {
+        return id;
+    }
+
     private String name;
     private String capital;
     private String flag_url;

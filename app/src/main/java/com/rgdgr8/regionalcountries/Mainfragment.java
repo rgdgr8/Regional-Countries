@@ -4,10 +4,14 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -24,14 +28,41 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Mainfragment extends Fragment {
+public class MainFragment extends Fragment {
+    private static final String TAG = "MainFrag";
     private CountryAdapter adapter;
+    private CountryDao dao;
 
     @Override
     public void onCreate(@Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setRetainInstance(true);
+        setHasOptionsMenu(true);
 
+        CountryDataBase db = CountryDataBase.getDataBase(getActivity());
+        dao = db.getDao();
         new CountryDownloadTask("asia").execute();
+    }
+
+    @Override
+    public void onCreateOptionsMenu(@NonNull @NotNull Menu menu, @NonNull @NotNull MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.main_menu, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull @NotNull MenuItem item) {
+        if (item.getItemId() == R.id.clear_db) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    dao.deleteAll();
+                }
+            }).start();
+            Toast.makeText(getActivity(), "Database Cleared", Toast.LENGTH_SHORT).show();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Nullable
@@ -49,16 +80,6 @@ public class Mainfragment extends Fragment {
         return rootView;
     }
 
-    private List<Country> getDummyCountries() {
-        List<Country> dummyCountriee = new ArrayList<>();
-        for (int i = 0; i < 10; i++) {
-            int x = i + 1;
-            dummyCountriee.add(new Country("name" + x, "capital" + x, "flag" + x, "region" + x
-                    , "subregion" + x, "population" + x, "borders" + x, "languages" + x));
-        }
-        return dummyCountriee;
-    }
-
     private void initializeAdapter() {
         if (adapter == null) {
             adapter = new CountryAdapter();
@@ -68,7 +89,7 @@ public class Mainfragment extends Fragment {
     }
 
     private class CountryDownloadTask extends AsyncTask<Void, Void, Void> {
-        private String region;
+        private final String region;
 
         public CountryDownloadTask(String region) {
             this.region = region;
@@ -77,11 +98,20 @@ public class Mainfragment extends Fragment {
         @Override
         protected Void doInBackground(Void... voids) {
             try {
-                DataFetcher.getData(region);
+                Log.d(TAG, "doInBackground: ");
+                boolean dataAvailable = DataFetcher.getData(region, dao, getActivity());
+                if (!dataAvailable) {
+                    publishProgress();
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
             return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(Void... values) {
+            Toast.makeText(getActivity(), getString(R.string.no_network), Toast.LENGTH_LONG).show();
         }
 
         @Override
@@ -94,8 +124,7 @@ public class Mainfragment extends Fragment {
         private static final String TAG = "CountryHolder";
         private final TextView name;
         private final TextView capital;
-        //private final ImageView flag;
-        private final TextView flag;
+        private final ImageView flag;
         private final TextView region;
         private final TextView subRegion;
         private final TextView population;
@@ -122,12 +151,13 @@ public class Mainfragment extends Fragment {
             String flagUrl = country.getFlag_url();
             Log.i(TAG, "flag_url: " + flagUrl);
 
-            /*Glide.with(getActivity())
+            Glide.with(getActivity())
                     .load(flagUrl)
-                    .diskCacheStrategy(DiskCacheStrategy.DATA)
+                    .diskCacheStrategy(DiskCacheStrategy.DATA)//caching image as raw bytes.
                     .placeholder(R.drawable.ic_launcher_foreground)
-                    .into(flag);*/
-            flag.setText(country.getFlag_url());
+                    .error(R.drawable.no_network_connection_error)
+                    .into(flag);
+
             region.setText(country.getRegion());
             subRegion.setText(country.getSubRegion());
             population.setText(country.getPopulation());
@@ -153,7 +183,7 @@ public class Mainfragment extends Fragment {
         }
 
         @Override
-        public void onBindViewHolder(@NonNull @NotNull Mainfragment.CountryHolder holder, int position) {
+        public void onBindViewHolder(@NonNull @NotNull MainFragment.CountryHolder holder, int position) {
             try {
                 holder.bind(countries.get(position));
             } catch (IOException e) {

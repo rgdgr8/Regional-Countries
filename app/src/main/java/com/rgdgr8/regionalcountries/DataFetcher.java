@@ -1,7 +1,10 @@
 package com.rgdgr8.regionalcountries;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -18,7 +21,7 @@ import java.util.List;
 
 public class DataFetcher {
     private static final String TAG = "DataFetcher";
-    private static List<Country> countries = new ArrayList<>();
+    private static final List<Country> countries = new ArrayList<>();
     private static final String REGION_ENDPOINT = "https://restcountries.eu/rest/v2/region/";
     private static final String BORDERS = "borders";
     private static final String LANGUAGES = "languages";
@@ -27,7 +30,28 @@ public class DataFetcher {
         return countries;
     }
 
-    public static void getData(String region) throws IOException, JSONException {
+    private static boolean isNetworkAvailableAndConnected(Context context){
+        ConnectivityManager manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        boolean isNetworkAvailable = (manager.getActiveNetworkInfo() != null);
+        boolean isNetworkConnected = (isNetworkAvailable && manager.getActiveNetworkInfo().isConnected());
+
+        return isNetworkConnected;
+    }
+
+    //returns true if some data was found, else false
+    public static boolean getData(String region, CountryDao dao, Context context) throws IOException, JSONException {
+        if (!isNetworkAvailableAndConnected(context)) {
+            List<Country> dbCountries = dao.getAll();
+            Log.i(TAG, "getData: db size = "+dbCountries.size());
+            if (dbCountries != null && dbCountries.size() > 0) {
+                countries.clear();
+                countries.addAll(dbCountries);
+                return true;
+            }
+            return false;
+        }
+        dao.deleteAll();
+
         String urlString = REGION_ENDPOINT + region;
         Log.i(TAG, "url: " + urlString);
 
@@ -63,6 +87,10 @@ public class DataFetcher {
             Country country = new Country(name,capital,flag_url,region,subRegion,population,borders,languages);
             countries.add(country);
         }
+
+        Log.i(TAG, "getData: list size = "+countries.size());
+        dao.insertAll(countries);
+        return true;
     }
 
     private static String getStringFromJSONArray(String query, JSONObject countryObject) throws JSONException {
