@@ -20,12 +20,16 @@
             android:id="@+id/capital_tv"
             style="@style/CountryTextView"
             android:text="capital"/>
-        <ImageView
+        <!--ImageView
             android:id="@+id/flag"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="120dp"
             app:srcCompat="@drawable/ic_launcher_foreground"
-            android:contentDescription="flag"/>
+            android:contentDescription="flag"/-->
+        <TextView
+            android:id="@+id/flag"
+            style="@style/CountryTextView"
+            android:text="flag"/>
         <TextView
             android:id="@+id/region_tv"
             style="@style/CountryTextView"

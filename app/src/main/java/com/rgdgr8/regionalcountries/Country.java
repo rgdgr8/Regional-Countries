@@ -1,5 +1,9 @@
 package com.rgdgr8.regionalcountries;
 
+import androidx.room.Entity;
+import androidx.room.Ignore;
+
+@Entity(tableName = "countries")
 public class Country {
     private String name;
     private String capital;

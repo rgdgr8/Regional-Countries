@@ -29,14 +29,20 @@ android {
 }
 
 dependencies {
+    def room_version = "2.3.0"
+
+    implementation "androidx.room:room-runtime:$room_version"
+    annotationProcessor "androidx.room:room-compiler:$room_version"
 
     implementation 'androidx.appcompat:appcompat:1.3.0'
     implementation 'com.google.android.material:material:1.4.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'org.jetbrains:annotations:15.0'
-    implementation 'com.squareup.picasso:picasso:2.71828'
-    implementation 'com.github.corouteam:GlideToVectorYou:v2.0.0'
-    //implementation 'com.github.ar-android:AndroidSvgLoader:1.0.2'
+
+    implementation 'com.github.corouteam:GlideToVectorYou:v2.0.0'//for decoding svg(may also be used to directly load svg into view)
+    implementation 'com.github.bumptech.glide:glide:4.12.0'//for using glide. Above dependency must be present, otherwise glide alone cannot decode svg images
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.12.0'
+
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'

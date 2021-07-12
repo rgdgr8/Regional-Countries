@@ -1,6 +1,5 @@
 package com.rgdgr8.regionalcountries;
 
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,16 +15,14 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.github.twocoffeesoneteam.glidetovectoryou.GlideToVectorYou;
-import com.squareup.picasso.Picasso;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-//import com.ahmadrosid.svgloader.SvgLoader;
 
 public class Mainfragment extends Fragment {
     private CountryAdapter adapter;
@@ -41,7 +38,7 @@ public class Mainfragment extends Fragment {
     @org.jetbrains.annotations.Nullable
     @Override
     public View onCreateView(@NonNull @org.jetbrains.annotations.NotNull LayoutInflater inflater, @Nullable @org.jetbrains.annotations.Nullable ViewGroup container, @Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_main,container,false);
+        View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
         RecyclerView rv = rootView.findViewById(R.id.recycler_view);
         rv.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -52,25 +49,25 @@ public class Mainfragment extends Fragment {
         return rootView;
     }
 
-    private List<Country> getDummyCountries(){
+    private List<Country> getDummyCountries() {
         List<Country> dummyCountriee = new ArrayList<>();
-        for (int i=0;i<10;i++){
-            int x = i+1;
-            dummyCountriee.add(new Country("name"+x,"capital"+x,"flag"+x,"region"+x
-                    ,"subregion"+x,"population"+x,"borders"+x,"languages"+x));
+        for (int i = 0; i < 10; i++) {
+            int x = i + 1;
+            dummyCountriee.add(new Country("name" + x, "capital" + x, "flag" + x, "region" + x
+                    , "subregion" + x, "population" + x, "borders" + x, "languages" + x));
         }
         return dummyCountriee;
     }
 
-    private void initializeAdapter(){
-        if(adapter == null){
+    private void initializeAdapter() {
+        if (adapter == null) {
             adapter = new CountryAdapter();
-        }else {
+        } else {
             adapter.notifyDataSetChanged();
         }
     }
 
-    private class CountryDownloadTask extends AsyncTask<Void,Void,Void>{
+    private class CountryDownloadTask extends AsyncTask<Void, Void, Void> {
         private String region;
 
         public CountryDownloadTask(String region) {
@@ -93,11 +90,12 @@ public class Mainfragment extends Fragment {
         }
     }
 
-    private class CountryHolder extends RecyclerView.ViewHolder{
+    private class CountryHolder extends RecyclerView.ViewHolder {
         private static final String TAG = "CountryHolder";
         private final TextView name;
         private final TextView capital;
-        private final ImageView flag;
+        //private final ImageView flag;
+        private final TextView flag;
         private final TextView region;
         private final TextView subRegion;
         private final TextView population;
@@ -122,20 +120,14 @@ public class Mainfragment extends Fragment {
             capital.setText(country.getCapital());
 
             String flagUrl = country.getFlag_url();
-            Log.i(TAG, "flag_url: "+flagUrl);
-            if(flagUrl.endsWith(".svg")){
-                GlideToVectorYou
-                        .init()
-                        .with(getActivity())
-                        .setPlaceHolder(R.mipmap.ic_launcher, R.drawable.ic_launcher_foreground)
-                        .load(Uri.parse(flagUrl), flag);
-            }else {
-                Picasso.get()
-                        .load(flagUrl)
-                        .placeholder(R.drawable.ic_launcher_foreground)
-                        .into(flag);
-            }
+            Log.i(TAG, "flag_url: " + flagUrl);
 
+            /*Glide.with(getActivity())
+                    .load(flagUrl)
+                    .diskCacheStrategy(DiskCacheStrategy.DATA)
+                    .placeholder(R.drawable.ic_launcher_foreground)
+                    .into(flag);*/
+            flag.setText(country.getFlag_url());
             region.setText(country.getRegion());
             subRegion.setText(country.getSubRegion());
             population.setText(country.getPopulation());
@@ -145,8 +137,9 @@ public class Mainfragment extends Fragment {
 
     }
 
-    private class CountryAdapter extends RecyclerView.Adapter<CountryHolder>{
+    private class CountryAdapter extends RecyclerView.Adapter<CountryHolder> {
         private final List<Country> countries;
+
         public CountryAdapter() {
             this.countries = DataFetcher.getCountries();
         }
@@ -156,7 +149,7 @@ public class Mainfragment extends Fragment {
         @Override
         public CountryHolder onCreateViewHolder(@NonNull @NotNull ViewGroup parent, int viewType) {
             LayoutInflater inflater = LayoutInflater.from(getActivity());
-            return new CountryHolder(inflater.inflate(R.layout.list_item,parent,false));
+            return new CountryHolder(inflater.inflate(R.layout.list_item, parent, false));
         }
 
         @Override
