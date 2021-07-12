@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_margin="10dp"
+    app:cardCornerRadius="10dp"
+    android:elevation="20dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/name_tv"
+            style="@style/CountryTextView"
+            android:text="name"/>
+        <TextView
+            android:id="@+id/capital_tv"
+            style="@style/CountryTextView"
+            android:text="capital"/>
+        <ImageView
+            android:id="@+id/flag"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:srcCompat="@drawable/ic_launcher_foreground"
+            android:contentDescription="flag"/>
+        <TextView
+            android:id="@+id/region_tv"
+            style="@style/CountryTextView"
+            android:text="region"/>
+        <TextView
+            android:id="@+id/sub_region_tv"
+            style="@style/CountryTextView"
+            android:text="subregion"/>
+        <TextView
+            android:id="@+id/population_tv"
+            style="@style/CountryTextView"
+            android:text="population"/>
+        <TextView
+            android:id="@+id/borders_tv"
+            style="@style/CountryTextView"
+            android:text="borders"/>
+        <TextView
+            android:id="@+id/languages_tv"
+            style="@style/CountryTextView"
+            android:text="languages"/>
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>
