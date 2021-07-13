@@ -1,4 +1,4 @@
 <resources>
     <string name="app_name">Regional Countries</string>
-    <string name="no_network">App cannot detect network\nCheck your internet connection and restart the app</string>
+    <string name="no_network">No Internet</string>
 </resources>

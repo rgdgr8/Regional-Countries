@@ -9,12 +9,14 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -25,11 +27,11 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class MainFragment extends Fragment {
     private static final String TAG = "MainFrag";
+    private String lastSearchedRegion = "asia";
     private CountryAdapter adapter;
     private CountryDao dao;
 
@@ -41,13 +43,29 @@ public class MainFragment extends Fragment {
 
         CountryDataBase db = CountryDataBase.getDataBase(getActivity());
         dao = db.getDao();
-        new CountryDownloadTask("asia").execute();
+        new CountryDownloadTask(lastSearchedRegion).execute();
     }
 
     @Override
     public void onCreateOptionsMenu(@NonNull @NotNull Menu menu, @NonNull @NotNull MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.main_menu, menu);
+
+        SearchView searchView = (SearchView) menu.findItem(R.id.search).getActionView();
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                new CountryDownloadTask(query).execute();
+                searchView.clearFocus();
+                lastSearchedRegion = query;
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
     }
 
     @Override
@@ -61,6 +79,8 @@ public class MainFragment extends Fragment {
             }).start();
             Toast.makeText(getActivity(), "Database Cleared", Toast.LENGTH_SHORT).show();
             return true;
+        } else if (item.getItemId() == R.id.refresh) {
+            new CountryDownloadTask(lastSearchedRegion).execute();
         }
         return super.onOptionsItemSelected(item);
     }
@@ -88,8 +108,18 @@ public class MainFragment extends Fragment {
         }
     }
 
+    private void setBackgroundToNormal(boolean normal) {
+        FrameLayout frameLayout = getActivity().findViewById(R.id.frame);
+        if (normal) {
+            frameLayout.setBackground(null);
+        } else {
+            frameLayout.setBackgroundResource(R.drawable.no_network_connection_error);
+        }
+    }
+
     private class CountryDownloadTask extends AsyncTask<Void, Void, Void> {
         private final String region;
+        private int dataAvailable;
 
         public CountryDownloadTask(String region) {
             this.region = region;
@@ -97,25 +127,34 @@ public class MainFragment extends Fragment {
 
         @Override
         protected Void doInBackground(Void... voids) {
-            try {
-                Log.d(TAG, "doInBackground: ");
-                boolean dataAvailable = DataFetcher.getData(region, dao, getActivity());
-                if (!dataAvailable) {
-                    publishProgress();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            publishProgress();
+            dataAvailable = DataFetcher.getData(region, dao, getActivity());
             return null;
         }
 
         @Override
         protected void onProgressUpdate(Void... values) {
-            Toast.makeText(getActivity(), getString(R.string.no_network), Toast.LENGTH_LONG).show();
+            setBackgroundToNormal(true);
         }
 
         @Override
         protected void onPostExecute(Void unused) {
+            TextView textView = getActivity().findViewById(R.id.error_tv);
+            switch (dataAvailable) {
+                case DataFetcher.NO_INTERNET:
+                    Toast.makeText(getActivity(), getString(R.string.no_network), Toast.LENGTH_LONG).show();
+                    if(adapter==null || adapter.getItemCount()==0) {
+                        setBackgroundToNormal(false);
+                    }
+                    break;
+                case DataFetcher.ERROR_404:
+                    Toast.makeText(getActivity(), "Error 404", Toast.LENGTH_SHORT).show();
+                    textView.setText("No results found for " + region);
+                    break;
+                default:
+                    textView.setText("");
+            }
+
             initializeAdapter();
         }
     }

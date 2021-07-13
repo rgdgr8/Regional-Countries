@@ -25,6 +25,9 @@ public class DataFetcher {
     private static final String REGION_ENDPOINT = "https://restcountries.eu/rest/v2/region/";
     private static final String BORDERS = "borders";
     private static final String LANGUAGES = "languages";
+    public static final int NO_INTERNET = 0;
+    public static final int INTERNET_OK = 1;
+    public static final int ERROR_404 = 2;
 
     public static List<Country> getCountries() {
         return countries;
@@ -39,58 +42,64 @@ public class DataFetcher {
     }
 
     //returns true if some data was found, else false
-    public static boolean getData(String region, CountryDao dao, Context context) throws IOException, JSONException {
+    public static int getData(String region, CountryDao dao, Context context) {
         if (!isNetworkAvailableAndConnected(context)) {
             List<Country> dbCountries = dao.getAll();
             Log.i(TAG, "getData: db size = "+dbCountries.size());
             if (dbCountries != null && dbCountries.size() > 0) {
                 countries.clear();
                 countries.addAll(dbCountries);
-                return true;
             }
-            return false;
+            return NO_INTERNET;
         }
         dao.deleteAll();
+        countries.clear();
 
         String urlString = REGION_ENDPOINT + region;
         Log.i(TAG, "url: " + urlString);
 
-        URL url = new URL(urlString);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        try {
+            URL url = new URL(urlString);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
-        InputStream input = connection.getInputStream();
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
+            InputStream input = connection.getInputStream();
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
 
-        byte[] buffer = new byte[2048];
-        int bytesRead = 0;
-        while ((bytesRead = input.read(buffer)) > 0) {
-            output.write(buffer, 0, bytesRead);
-        }
-        output.close();
-        connection.disconnect();
+            byte[] buffer = new byte[2048];
+            int bytesRead = 0;
+            while ((bytesRead = input.read(buffer)) > 0) {
+                output.write(buffer, 0, bytesRead);
+            }
+            input.close();
+            output.close();
+            connection.disconnect();
 
-        String jsonData = new String(output.toByteArray());
-        Log.i(TAG, "getData: " + jsonData);
+            String jsonData = new String(output.toByteArray());
+            Log.i(TAG, "getData: " + jsonData);
 
-        JSONArray objectArray = new JSONArray(jsonData);
-        for (int i = 0; i < objectArray.length(); i++) {
-            JSONObject countryObject = objectArray.getJSONObject(i);
-            String name = countryObject.getString("name");
-            String capital = countryObject.getString("capital");
-            String flag_url = countryObject.getString("flag");
-            region = countryObject.getString("region");
-            String subRegion = countryObject.getString("subregion");
-            String population = countryObject.getString("population");
-            String borders = getStringFromJSONArray(BORDERS, countryObject);
-            String languages = getStringFromJSONArray(LANGUAGES, countryObject);
+            JSONArray objectArray = new JSONArray(jsonData);
+            for (int i = 0; i < objectArray.length(); i++) {
+                JSONObject countryObject = objectArray.getJSONObject(i);
+                String name = countryObject.getString("name");
+                String capital = countryObject.getString("capital");
+                String flag_url = countryObject.getString("flag");
+                region = countryObject.getString("region");
+                String subRegion = countryObject.getString("subregion");
+                String population = countryObject.getString("population");
+                String borders = getStringFromJSONArray(BORDERS, countryObject);
+                String languages = getStringFromJSONArray(LANGUAGES, countryObject);
 
-            Country country = new Country(name,capital,flag_url,region,subRegion,population,borders,languages);
-            countries.add(country);
+                Country country = new Country(name, capital, flag_url, region, subRegion, population, borders, languages);
+                countries.add(country);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+            return ERROR_404;
         }
 
         Log.i(TAG, "getData: list size = "+countries.size());
         dao.insertAll(countries);
-        return true;
+        return INTERNET_OK;
     }
 
     private static String getStringFromJSONArray(String query, JSONObject countryObject) throws JSONException {

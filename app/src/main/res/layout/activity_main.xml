@@ -6,4 +6,13 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <TextView
+        android:layout_gravity="center"
+        android:id="@+id/error_tv"
+        android:textSize="24sp"
+        android:textAllCaps="true"
+        android:gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
 </FrameLayout>
