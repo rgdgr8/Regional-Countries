@@ -1,4 +1,4 @@
-Regional Countries is an android app made using Java to display information about countries in region by consuming a rest api and persistantly storing most of the data to display when the user is offline.
+Regional Countries is an android app made using Java to display information about countries in a region by consuming a rest api and persistantly storing most of the data to display when the user is offline.
 
 The following attributes of a country(if found) are displayed - 
 1. name
@@ -18,5 +18,5 @@ The app has a toolbar menu option for refreshing the screen.
 
 Note:
 1. GlideToVector library has been used to decode svg image files.
-2. Glide librariy have been used to download, cache and temporarily persist all image data
+2. Glide library have been used to download, cache and temporarily persist all image data
 3. Only text/String data has been stored using Room
